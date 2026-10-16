@@ -1,0 +1,262 @@
+{% extends "base.html" %}
+{% block title %}Scan | Idle AWS Finder{% endblock %}
+
+{% block extra_css %}
+.panel { background: white; border: 1px solid #e4eaf2; border-radius: 12px; padding: 23px; margin-bottom: 20px; }
+.panel-title { font-size: 16px; font-weight: 800; margin-bottom: 7px; }
+.panel-desc { color: #64748b; font-size: 12px; line-height: 1.7; }
+.form-label { font-size: 12px; font-weight: 700; }
+.form-select, .form-control { font-size: 13px; min-height: 43px; border-color: #d7e0ec; }
+.region-option{ display: flex; align-items: flex-start; gap: 10px; padding: 13px; border: 1px solid #e1e8f1;
+border-radius: 9px; height: 100%; cursor: pointer; }
+.region-option input { margin-top: 4px; accent-color: #2671dc; }
+.region-option strong { font-size: 12px; display: block; }
+.region-option small { color: #64748b; font-size: 11px; }
+.btn-amber { background: var(--amber); color: #142039; border: 0; font-weight: 800; font-size: 13px; padding: 12px 19px;
+border-radius: 8px; }
+.btn-amber:hover { background: #ffda78; color: #142039; }
+.btn-light-ol { border: 1px solid #d5dfeb; background: white; color: #34445e; font-size: 12px; padding: 10px 15px;
+border-radius: 8px; }
+.info-box { display: flex; gap: 11px; background: #eff6ff; color: #284e7a; border: 1px solid #d6e8ff; border-radius:
+9px; padding: 13px; font-size: 12px; line-height: 1.6; }
+.warning-box { display: flex; gap: 11px; background: #fff3cd; color: #664d03; border: 1px solid #ffe69c; border-radius:
+9px; padding: 13px; font-size: 12px; line-height: 1.6; }
+.stat { border: 1px solid #e4eaf2; background: white; padding: 17px; border-radius: 10px; height: 100%; }
+.stat-label { color: #64748b; font-size: 11px; }
+.stat-number { font-size: 25px; font-weight: 800; margin-top: 7px; }
+.table th { background: #f8fafc; color: #64748b; font-size: 11px; white-space: nowrap; padding: 14px 12px; }
+.table td { font-size: 12px; vertical-align: middle; color: #34445e; padding: 14px 12px; }
+.status-done { color: #16834b; background: #e3f8ec; padding: 5px 9px; border-radius: 20px; font-size: 10px; font-weight:
+700; }
+.status-run { color: #a76b00; background: #fff3cd; padding: 5px 9px; border-radius: 20px; font-size: 10px; font-weight:
+700; }
+.status-fail { color: #b93828; background: #ffebe8; padding: 5px 9px; border-radius: 20px; font-size: 10px; font-weight:
+700; }
+{% endblock %}
+
+{% block content %}
+<div class="topbar">
+  <div>
+    <h1 class="page-title">Scan AWS Resources</h1>
+    <p class="page-subtitle">Scan for idle resources and see estimated monthly costs.</p>
+  </div>
+  <span class="account"><i class="bi bi-person-circle me-1"></i>{{ current_user.name }}</span>
+</div>
+
+<div class="panel">
+  <div class="panel-title">Configure Your Scan</div>
+  <p class="panel-desc mb-4">Choose which regions to scan. ap-south-1 is pre-selected.</p>
+
+  <form method="POST" action="{{ url_for('scan') }}">
+    <label class="form-label mb-2">AWS Regions</label>
+    <div class="info-box mb-4">
+      <i class="bi bi-shield-check"></i>
+      <div><strong>Default scanning "All Enabled Regions" selected</strong><br>
+        If you want to scan specific regions, uncheck this option and select the regions you want to scan.</div>
+    </div>
+    <div class="row g-2 mb-4">
+      <div class="col-sm-6 col-lg-4">
+        <label class="region-option">
+          <input type="checkbox" name="region" value="all" id="allRegionsCheck" {% if settings.scan_all_regions
+            %}checked{% endif %}>
+          <span>
+            <strong>All Enabled Regions</strong>
+            <small>Scans every region enabled on your account</small>
+          </span>
+        </label>
+      </div>
+      {% for value, label in [
+      ('us-east-1', 'US East (N. Virginia)'),
+      ('us-east-2', 'US East (Ohio)'),
+      ('us-west-1', 'US West (N. California)'),
+      ('us-west-2', 'US West (Oregon)'),
+      ('ap-south-1', 'Asia Pacific (Mumbai)'),
+      ('ap-northeast-3', 'Asia Pacific (Osaka)'),
+      ('ap-northeast-2', 'Asia Pacific (Seoul)'),
+      ('ap-southeast-1', 'Asia Pacific (Singapore)'),
+      ('ap-southeast-2', 'Asia Pacific (Sydney)'),
+      ('ap-northeast-1', 'Asia Pacific (Tokyo)'),
+      ('ca-central-1', 'Canada (Central)'),
+      ('eu-central-1', 'Europe (Frankfurt)'),
+      ('eu-west-1', 'Europe (Ireland)'),
+      ('eu-west-2', 'Europe (London)'),
+      ('eu-west-3', 'Europe (Paris)'),
+      ('eu-north-1', 'Europe (Stockholm)'),
+      ('sa-east-1', 'South America (São Paulo)')
+      ] %}
+      <div class="col-sm-6 col-lg-4">
+        <label class="region-option">
+          <input type="checkbox" name="region" value="{{ value }}" class="specific-region" {% if not
+            settings.scan_all_regions and value==settings.default_region %}checked{% endif %}>
+          <span>
+            <strong>{{ label }}</strong>
+            <small>{{ value }}</small>
+          </span>
+        </label>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="warning-box mb-4">
+      <i class="bi bi-shield-check"></i>
+      <div><strong>Read-only scan</strong><br>
+        This scan only reads. It will not stop, delete, or modify any AWS resources.</div>
+    </div>
+
+    <button type="submit" class="btn-amber">
+      <i class="bi bi-search me-2"></i>Start Scan
+    </button>
+    <a href="{{ url_for('dashboard') }}" class="btn-light-ol ms-2">Cancel</a>
+  </form>
+</div>
+
+<!-- Stats row -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-3">
+    <div class="stat">
+      <div class="stat-label">Last Scan</div>
+      <div class="stat-number fs-6">
+        {% if recent_scans %}
+        {{ recent_scans[0].started_at.strftime('%d %b') }}
+        {% else %}
+        Never
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="stat">
+      <div class="stat-label">Total Scans</div>
+      <div class="stat-number">{{ recent_scans|length }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="stat">
+      <div class="stat-label">CPU Threshold</div>
+      <div class="stat-number fs-6">Below {{ settings.cpu_threshold }}%</div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="stat">
+      <div class="stat-label">Snapshot Age</div>
+      <div class="stat-number fs-6">{{ settings.snapshot_age_days }} days</div>
+    </div>
+  </div>
+</div>
+
+<!-- Scan history -->
+<div class="panel p-0">
+  <div class="p-4 pb-2">
+    <div class="panel-title">Recent Scans</div>
+    <p class="panel-desc">Your last 10 scan attempts.</p>
+  </div>
+  <div class="table-responsive px-3 pb-3">
+    {% if recent_scans %}
+    <table class="table table-hover mb-0">
+      <thead>
+        <tr>
+          <th>Scan ID</th>
+          <th>Date</th>
+          <th>Regions</th>
+          <th>Findings</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in recent_scans %}
+        <tr>
+          <td>SCAN-{{ s.id }}</td>
+          <td>{{ s.started_at.strftime('%d %b %Y, %I:%M %p') }}</td>
+          <td>
+            {% if not s.regions or s.regions == ['All Regions'] or s.regions == 'All' %}
+            All
+            {% else %}
+            {{ s.regions|length }}
+            {% endif %}
+          </td>
+          <td>{{ s.resources_checked }}</td>
+          <td>
+            {% if s.status == 'completed' %}
+            <span class="status-done">Completed</span>
+            {% elif s.status == 'running' %}
+            <span class="status-run">Running</span>
+            {% elif s.status == 'failed' %}
+            <span class="status-fail" title="{{ s.error_message }}">Failed</span>
+            {% else %}
+            <span>{{ s.status }}</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if s.status == 'completed' %}
+            <div class="d-flex gap-2 align-items-center">
+              <a href="{{ url_for('findings', scan_id=s.id) }}" class="btn btn-sm btn-outline-primary"
+                style="font-size:11px">
+                <i class="bi bi-eye me-1"></i>View
+              </a>
+              <!-- Delete button: shows confirm row on click, does not submit yet -->
+              <button class="btn btn-sm btn-outline-danger" style="font-size:11px"
+                onclick="showConfirm({{ s.id }}, this)">
+                <i class="bi bi-trash me-1"></i>Delete
+              </button>
+            </div>
+            <!-- Confirm row, hidden until the delete button above is clicked -->
+            <div id="confirm-{{ s.id }}" class="d-none mt-2" style="font-size:11px; background:#fff5f5; border:1px solid #fed7d7;
+                border-radius:7px; padding:8px 10px;">
+              Delete SCAN-{{ s.id }} and all its findings?
+              <div class="d-flex gap-2 mt-2">
+                <form method="POST" action="{{ url_for('delete_scan', scan_id=s.id) }}" style="display:inline">
+                  <button type="submit" class="btn btn-sm btn-danger" style="font-size:11px">Yes, delete</button>
+                </form>
+                <button class="btn btn-sm btn-outline-secondary" style="font-size:11px"
+                  onclick="hideConfirm({{ s.id }})">Cancel</button>
+              </div>
+            </div>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="text-muted small p-3">No scans yet.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+  const allCheck = document.getElementById('allRegionsCheck');
+  const specific = document.querySelectorAll('.specific-region');
+
+  allCheck.addEventListener('change', () => {
+    specific.forEach(cb => {
+      cb.checked = false;
+      cb.disabled = allCheck.checked;
+    });
+  });
+
+  specific.forEach(cb => cb.addEventListener('change', () => {
+    if (cb.checked) allCheck.checked = false;
+  }));
+
+  // Apply disabled state on page load
+  if (allCheck.checked) specific.forEach(cb => cb.disabled = true);
+
+  // Scans (View + Delete): Show confirm row when delete button is clicked, hide it when cancel is clicked
+  function showConfirm(id, btn) {
+    // Hide any other open confirm rows first
+    document.querySelectorAll('[id^="confirm-"]').forEach(el => el.classList.add('d-none'));
+    document.getElementById('confirm-' + id).classList.remove('d-none');
+    btn.disabled = true;
+  }
+
+  function hideConfirm(id) {
+    document.getElementById('confirm-' + id).classList.add('d-none');
+    // Re-enable the delete button
+    const row = document.getElementById('confirm-' + id).previousElementSibling;
+    const deleteBtn = row.querySelector('.btn-outline-danger');
+    if (deleteBtn) deleteBtn.disabled = false;
+  }
+</script>
+{% endblock %}
