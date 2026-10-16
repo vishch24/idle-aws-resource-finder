@@ -1,0 +1,692 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Idle AWS Finder | Home</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #06152e;
+      --panel: #0b2040;
+      --border: #244873;
+      --amber: #ffc84a;
+      --blue: #5da8ff;
+      --muted: #b9cce8;
+      --green: #38c878;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, sans-serif;
+      color: #f5f8ff;
+      background: radial-gradient(ellipse at 45% 15%, #0d2850, var(--bg) 70%);
+    }
+
+    a { text-decoration: none; }
+
+    .navbar {
+      background: #06152ee8;
+      border-bottom: 1px solid #244873;
+      padding: 18px 0;
+    }
+
+    .navbar-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: white;
+      font-size: 19px;
+      font-weight: 800;
+      letter-spacing: -.5px;
+    }
+
+    .navbar-brand:hover { color: white; }
+
+    .brand-icon {
+      display: grid;
+      place-items: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 11px;
+      background: #ffc84a18;
+      border: 1px solid #ffc84a55;
+      color: var(--amber);
+      font-size: 22px;
+    }
+
+    .brand-highlight { color: var(--amber); }
+
+    .nav-link {
+      color: #c6d6ed;
+      font-size: 13px;
+      font-weight: 500;
+      margin: 0 8px;
+    }
+
+    .nav-link:hover { color: var(--amber); }
+
+    .btn-signin {
+      border: 1px solid #41618a;
+      border-radius: 8px;
+      padding: 10px 20px;
+      color: white;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .btn-signin:hover {
+      border-color: var(--amber);
+      color: var(--amber);
+    }
+
+    .btn-primary-custom {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      gap: 9px;
+      padding: 13px 22px;
+      border: 0;
+      border-radius: 9px;
+      color: #101a2b;
+      background: var(--amber);
+      font-size: 14px;
+      font-weight: 800;
+      transition: .2s;
+    }
+
+    .btn-primary-custom:hover {
+      background: #ffda78;
+      color: #101a2b;
+      transform: translateY(-2px);
+    }
+
+    .btn-outline-custom {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      padding: 12px 20px;
+      border: 1px solid #41618a;
+      border-radius: 9px;
+      color: #edf4ff;
+      font-size: 14px;
+      font-weight: 600;
+      transition: .2s;
+    }
+
+    .btn-outline-custom:hover {
+      color: var(--amber);
+      border-color: var(--amber);
+    }
+
+    .hero {
+      padding: 90px 0 75px;
+      overflow: hidden;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 13px;
+      margin-bottom: 23px;
+      border: 1px solid #315174;
+      border-radius: 30px;
+      color: #c9dcf7;
+      background: #0b2040;
+      font-size: 12px;
+    }
+
+    .eyebrow i { color: var(--green); }
+
+    .hero-title {
+      max-width: 720px;
+      font-size: clamp(2.6rem, 5.5vw, 4.7rem);
+      line-height: 1.08;
+      font-weight: 800;
+      letter-spacing: -.055em;
+    }
+
+    .hero-title span { color: var(--amber); }
+
+    .hero-description {
+      max-width: 570px;
+      margin-top: 22px;
+      color: #c4d5ed;
+      font-size: 16px;
+      line-height: 1.8;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 13px;
+      margin-top: 30px;
+    }
+
+    .trust-note {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      color: #a9bfdc;
+      font-size: 12px;
+      margin-top: 24px;
+    }
+
+    .trust-note i { color: var(--green); font-size: 16px; }
+
+    .visual-card {
+      position: relative;
+      padding: 22px;
+      background: linear-gradient(145deg, #102b50, #081a34);
+      border: 1px solid #315174;
+      border-radius: 17px;
+      box-shadow: 0 25px 65px #0004;
+    }
+
+    .visual-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid #244873;
+    }
+
+    .visual-title {
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: #71e5a1;
+      font-size: 11px;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+    }
+
+    .visual-total {
+      padding: 22px 0;
+    }
+
+    .visual-total-label {
+      color: #b9cce8;
+      font-size: 12px;
+    }
+
+    .visual-total-number {
+      font-size: 36px;
+      font-weight: 800;
+      letter-spacing: -1.5px;
+      margin-top: 5px;
+    }
+
+    .visual-total-number span {
+      color: var(--amber);
+      font-size: 17px;
+    }
+
+    .resource-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 0;
+      border-top: 1px solid #1c3b62;
+    }
+
+    .resource-icon {
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+      width: 39px;
+      height: 39px;
+      border-radius: 9px;
+      color: white;
+      font-size: 17px;
+    }
+
+    .resource-info { flex: 1; min-width: 0; }
+
+    .resource-name {
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .resource-detail {
+      color: #a9bfdc;
+      font-size: 10px;
+      margin-top: 4px;
+    }
+
+    .resource-cost {
+      color: var(--amber);
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .safe-label {
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+      padding: 12px;
+      margin-top: 14px;
+      border: 1px solid #245b4c;
+      border-radius: 9px;
+      background: #10362f;
+      color: #c2f4d5;
+      font-size: 11px;
+      line-height: 1.6;
+    }
+
+    .safe-label i { font-size: 16px; }
+
+    .section {
+      padding: 25px 0 75px;
+    }
+
+    .section-heading {
+      text-align: center;
+      margin-bottom: 35px;
+    }
+
+    .section-heading h2 {
+      font-size: clamp(1.8rem, 3vw, 2.5rem);
+      font-weight: 800;
+      letter-spacing: -.04em;
+    }
+
+    .section-heading p {
+      color: var(--muted);
+      font-size: 14px;
+      margin-top: 12px;
+    }
+
+    .feature-card {
+      height: 100%;
+      padding: 25px;
+      background: linear-gradient(145deg, #0d274c, #081a34);
+      border: 1px solid var(--border);
+      border-radius: 13px;
+      transition: transform .2s, border-color .2s;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-4px);
+      border-color: #5079a8;
+    }
+
+    .feature-icon {
+      display: grid;
+      place-items: center;
+      width: 48px;
+      height: 48px;
+      margin-bottom: 20px;
+      border-radius: 12px;
+      background: #ffc84a16;
+      border: 1px solid #ffc84a40;
+      color: var(--amber);
+      font-size: 23px;
+    }
+
+    .feature-card h3 {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 11px;
+    }
+
+    .feature-card p {
+      color: #b9cce8;
+      font-size: 13px;
+      line-height: 1.8;
+      margin: 0;
+    }
+
+    .resource-types {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 27px;
+    }
+
+    .resource-pill {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 12px 17px;
+      border: 1px solid #244873;
+      border-radius: 10px;
+      background: #0b2040;
+      color: #e3edfb;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .resource-pill i {
+      color: var(--amber);
+      font-size: 17px;
+    }
+
+    .cta {
+      padding: 36px;
+      text-align: center;
+      background: linear-gradient(120deg, #102b50, #0a2040);
+      border: 1px solid #315174;
+      border-radius: 16px;
+    }
+
+    .cta h2 {
+      font-size: clamp(1.6rem, 3vw, 2.3rem);
+      font-weight: 800;
+    }
+
+    .cta p {
+      color: var(--muted);
+      margin: 12px auto 22px;
+      font-size: 14px;
+    }
+
+    footer {
+      border-top: 1px solid #18365d;
+      padding: 22px 0;
+      color: #a9bfdc;
+      font-size: 12px;
+    }
+
+    footer .footer-brand {
+      color: white;
+      font-weight: 700;
+    }
+
+    footer i {
+      color: var(--amber);
+      margin-right: 7px;
+    }
+
+    @media (max-width: 991px) {
+      .hero { padding: 65px 0 55px; }
+      .hero-visual { margin-top: 35px; }
+      .navbar .container { row-gap: 12px; }
+    }
+
+    @media (max-width: 575px) {
+      .hero { padding: 50px 0 45px; }
+      .hero-title { font-size: 2.65rem; }
+      .hero-description { font-size: 14px; }
+      .visual-card { padding: 16px; }
+      .visual-total-number { font-size: 31px; }
+      .cta { padding: 28px 18px; }
+      .navbar-brand { font-size: 16px; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Navigation -->
+  <nav class="navbar navbar-expand-lg">
+    <div class="container">
+      <a class="navbar-brand" href="{{ url_for('home') }}">
+        <span class="brand-icon"><i class="bi bi-cloud-check"></i></span>
+        <span>Idle AWS <span class="brand-highlight">Finder</span></span>
+      </a>
+
+      <button class="navbar-toggler border-secondary" type="button"
+        data-bs-toggle="collapse" data-bs-target="#mainNavbar"
+        aria-controls="mainNavbar" aria-expanded="false"
+        aria-label="Toggle navigation">
+        <i class="bi bi-list text-white fs-3"></i>
+      </button>
+
+      <div class="collapse navbar-collapse" id="mainNavbar">
+        <ul class="navbar-nav ms-auto align-items-lg-center">
+          {% if current_user.is_authenticated %}
+          <li class="nav-item ms-lg-3 mt-2 mt-lg-0">
+            <a class="btn-primary-custom" href="{{ url_for('dashboard') }}">
+              Go to Dashboard <i class="bi bi-arrow-right"></i>
+            </a>
+          </li>
+          {% else %}
+          <li class="nav-item ms-lg-3 mt-2 mt-lg-0">
+            <a class="btn-signin d-inline-block" href="{{ url_for('login') }}">Sign In</a>
+          </li>
+          <li class="nav-item ms-lg-2 mt-2 mt-lg-0">
+            <a class="btn-primary-custom" href="{{ url_for('register') }}">
+              Get Started <i class="bi bi-arrow-right"></i>
+            </a>
+          </li>
+          {% endif %}
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <main>
+    <section class="hero">
+      <div class="container">
+        <div class="row align-items-center g-5">
+
+          <div class="col-lg-6">
+            <div class="eyebrow">
+              <i class="bi bi-shield-check"></i>
+              Built for AWS learners and small teams
+            </div>
+
+            <h1 class="hero-title">
+              Find idle AWS resources.
+              <span>Stop surprise bills.</span>
+            </h1>
+
+            <p class="hero-description">
+              Discover forgotten cloud resources, understand their
+              estimated monthly cost in rupees, and get clear cleanup
+              commands. Learn AWS without unnecessary spending.
+            </p>
+
+            <div class="hero-actions">
+              <a href="{{ url_for('register') }}" class="btn-primary-custom">
+                Get Started Free <i class="bi bi-arrow-right"></i>
+              </a>
+              <a href="{{ url_for('login') }}" class="btn-outline-custom">
+                <i class="bi bi-box-arrow-in-right"></i> Sign In
+              </a>
+            </div>
+
+            <div class="trust-note">
+              <i class="bi bi-shield-lock-fill"></i>
+              Read-only scanning. You stay in control of cleanup.
+            </div>
+          </div>
+
+          <!-- Dashboard preview -->
+          <div class="col-lg-6 hero-visual">
+            <div class="visual-card">
+
+              <div class="visual-top">
+                <div class="visual-title">
+                  <i class="bi bi-cloud-check me-2" style="color:var(--amber)"></i>
+                  Scan Overview
+                </div>
+                <div class="status">
+                  <span class="status-dot"></span> Sample results
+                </div>
+              </div>
+
+              <div class="visual-total">
+                <div class="visual-total-label">Estimated monthly waste</div>
+                <div class="visual-total-number">₹3,742 <span>/ month</span></div>
+              </div>
+
+              <div class="resource-row">
+                <div class="resource-icon" style="background:#ff9417">
+                  <i class="bi bi-server"></i>
+                </div>
+                <div class="resource-info">
+                  <div class="resource-name">EC2 Instances</div>
+                  <div class="resource-detail">1 low-activity instance found</div>
+                </div>
+                <div class="resource-cost">₹2,180</div>
+              </div>
+
+              <div class="resource-row">
+                <div class="resource-icon" style="background:#20a85a">
+                  <i class="bi bi-device-ssd"></i>
+                </div>
+                <div class="resource-info">
+                  <div class="resource-name">EBS Volumes</div>
+                  <div class="resource-detail">2 unattached volumes found</div>
+                </div>
+                <div class="resource-cost">₹1,210</div>
+              </div>
+
+              <div class="resource-row">
+                <div class="resource-icon" style="background:#6045df">
+                  <i class="bi bi-globe-americas"></i>
+                </div>
+                <div class="resource-info">
+                  <div class="resource-name">Elastic IPs</div>
+                  <div class="resource-detail">1 unassociated address found</div>
+                </div>
+                <div class="resource-cost">₹352</div>
+              </div>
+
+              <div class="resource-row">
+                <div class="resource-icon" style="background:#d32ca5">
+                  <i class="bi bi-camera"></i>
+                </div>
+                <div class="resource-info">
+                  <div class="resource-name">Snapshots</div>
+                  <div class="resource-detail">Review older snapshots</div>
+                </div>
+                <div class="resource-cost">Review</div>
+              </div>
+
+              <div class="safe-label">
+                <i class="bi bi-shield-check"></i>
+                <span>
+                  Findings are suggestions. No resources are deleted or
+                  stopped automatically.
+                </span>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- Features -->
+    <section class="section" id="features">
+      <div class="container">
+        <div class="section-heading">
+          <h2>Keep your AWS costs under control</h2>
+          <p>Simple resource checks designed for hands-on cloud learners.</p>
+        </div>
+
+        <div class="row g-4">
+          <div class="col-md-4">
+            <article class="feature-card">
+              <div class="feature-icon"><i class="bi bi-search"></i></div>
+              <h3>Find idle resources</h3>
+              <p>
+                Identify potentially unused AWS resources and see
+                useful details in one place.
+              </p>
+            </article>
+          </div>
+
+          <div class="col-md-4">
+            <article class="feature-card">
+              <div class="feature-icon"><i class="bi bi-currency-rupee"></i></div>
+              <h3>Understand estimated costs</h3>
+              <p>
+                View estimated monthly waste in rupees to help you
+                decide what deserves a closer look.
+              </p>
+            </article>
+          </div>
+
+          <div class="col-md-4">
+            <article class="feature-card">
+              <div class="feature-icon"><i class="bi bi-terminal"></i></div>
+              <h3>Get cleanup commands</h3>
+              <p>
+                See the relevant AWS CLI command for each finding.
+                Review it carefully before running it yourself.
+              </p>
+            </article>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Resource types -->
+    <section class="section pt-0" id="resources">
+      <div class="container">
+        <div class="section-heading">
+          <h2>What can you check?</h2>
+          <p>Review these common sources of avoidable AWS costs.</p>
+
+          <div class="resource-types">
+            <div class="resource-pill">
+              <i class="bi bi-server"></i> EC2 Instances
+            </div>
+            <div class="resource-pill">
+              <i class="bi bi-device-ssd"></i> EBS Volumes
+            </div>
+            <div class="resource-pill">
+              <i class="bi bi-globe-americas"></i> Elastic IPs
+            </div>
+            <div class="resource-pill">
+              <i class="bi bi-camera"></i> EBS Snapshots
+            </div>
+          </div>
+        </div>
+
+        <div class="cta">
+          <h2>Ready to check your cloud resources?</h2>
+          <p>
+            Start with a scan, review the findings, and decide what to do next.
+          </p>
+          <a href="{{ url_for('register') }}" class="btn-primary-custom">
+            Create Your Account <i class="bi bi-arrow-right"></i>
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container d-flex flex-wrap justify-content-between align-items-center gap-3">
+      <div class="footer-brand">
+        <i class="bi bi-cloud-check"></i>Idle AWS Resource Finder
+      </div>
+      <div>Learn&nbsp; · &nbsp;Build&nbsp; · &nbsp;Save</div>
+      <div>Built for the next generation of cloud learners.</div>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
