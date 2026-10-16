@@ -1,0 +1,12 @@
+services:
+  web:
+    image: DOCKERHUB_USER/idle-aws-web:IMAGE_TAG
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      SECRET_KEY: ${SECRET_KEY}
+      APP_PRINCIPAL_ARN: ${APP_PRINCIPAL_ARN}
+      DATABASE_URL: ${DATABASE_URL}
+      USD_TO_INR: ${USD_TO_INR:-88.0}
+      AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-us-west-2}
