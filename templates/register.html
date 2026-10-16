@@ -1,0 +1,45 @@
+{% extends "base_auth.html" %}
+{% block title %}Register | Idle AWS Finder{% endblock %}
+{% block card_content %}
+<div class="brand-icon"><i class="bi bi-person-plus-fill"></i></div>
+<h1 class="brand-title">Join Idle AWS <span>Finder</span></h1>
+<p class="subtitle">Create your account and start finding forgotten AWS resources before they increase your bill.</p>
+
+<form action="{{ url_for('register') }}" method="POST" id="regForm">
+  <div class="mb-3">
+    <label for="name" class="form-label">Full name</label>
+    <input type="text" class="form-control" id="name" name="name" placeholder="Your full name" autocomplete="name" required>
+  </div>
+  <div class="mb-3">
+    <label for="email" class="form-label">Email address</label>
+    <input type="email" class="form-control" id="email" name="email" placeholder="you@example.com" autocomplete="email" required>
+  </div>
+  <div class="mb-3">
+    <label for="password" class="form-label">Password</label>
+    <input type="password" class="form-control" id="password" name="password" placeholder="At least 8 characters" autocomplete="new-password" minlength="8" required>
+  </div>
+  <div class="mb-4">
+    <label for="confirm_password" class="form-label">Confirm password</label>
+    <input type="password" class="form-control" id="confirm_password" name="confirm_password" placeholder="Repeat your password" autocomplete="new-password" minlength="8" required>
+  </div>
+  <div class="form-check mb-4">
+    <input class="form-check-input" type="checkbox" id="terms" name="terms" required>
+    <label class="form-check-label" for="terms">I agree to the Terms of Service.</label>
+  </div>
+  <button type="submit" class="btn-auth">Create Account <i class="bi bi-arrow-right ms-1"></i></button>
+</form>
+<div class="security-note mt-3"><i class="bi bi-shield-lock-fill"></i> Never share your AWS secret access keys.</div>
+<p class="bottom-text">Already have an account? <a href="{{ url_for('login') }}" class="auth-link">Sign in</a></p>
+
+<script>
+const form = document.getElementById('regForm');
+const pwd  = document.getElementById('password');
+const cpwd = document.getElementById('confirm_password');
+form.addEventListener('submit', e => {
+  if (pwd.value !== cpwd.value) {
+    e.preventDefault(); cpwd.setCustomValidity('Passwords do not match.'); cpwd.reportValidity();
+  } else { cpwd.setCustomValidity(''); }
+});
+cpwd.addEventListener('input', () => cpwd.setCustomValidity(''));
+</script>
+{% endblock %}
