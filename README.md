@@ -125,7 +125,7 @@ The app never stores your AWS access keys. It uses a read-only cross-account IAM
 - MySQL running locally
 - AWS CLI configured with an IAM user that has `sts:AssumeRole` permission
 
-### Steps
+### Running with Local Environment (Python Virtual Environment)
 
 ```bash
 # Clone the repo
@@ -147,7 +147,7 @@ cp .env.example .env
 ```
 
 Edit `.env`:
-```
+```dotenv
 APP_PRINCIPAL_ARN=arn:aws:iam::<your-account-id>:user/<your-iam-user>
 SECRET_KEY=<a-long-random-string>
 DATABASE_URL=mysql+pymysql://root:<password>@localhost:3306/idle_aws_finder
@@ -156,7 +156,27 @@ USD_TO_INR=88.0
 
 ```bash
 # Run the app (creates tables automatically on first run)
-python app.py
+gunicorn --config gunicorn.conf.py app:app
+```
+
+### Using Docker Compose (Local Development)
+
+```bash
+# Clone the repo and navigate into the directory
+git clone https://github.com/vishch24/idle-aws-resource-finder.git
+cd idle-aws-resource-finder
+
+# Copy the example environment file and configure your values
+cp .env.example .env
+
+# Build and start the services (Flask app + MySQL) in detached mode
+docker compose -f docker-compose-local.yml up -d --build
+
+# View container logs
+docker compose -f docker-compose-local.yml logs
+
+# Stop the services when done
+docker compose -f docker-compose-local.yml down
 ```
 
 Open `http://127.0.0.1:5000`.
@@ -199,6 +219,6 @@ This project was built as part of the **AWS Elastic Beanstalk Community Hackatho
 
 ## Author
 
-**Vishakha Chavan**
-Full Stack Developer transitioning into DevOps Engineering
+**Vishakha Chavan**   
+Full Stack Developer transitioning into DevOps Engineering    
 [GitHub](https://github.com/vishch24) · [LinkedIn](https://linkedin.com/in/vishakha-chavan24)
