@@ -1,0 +1,260 @@
+{% extends "base.html" %}
+{% block title %}Findings | Idle AWS Finder{% endblock %}
+
+{% block extra_css %}
+.stat { border: 1px solid #e4eaf2; background: white; padding: 19px; border-radius: 11px; height: 100%; box-shadow: 0
+2px 6px rgba(20,32,57,0.03); }
+.stat-label { color: #64748b; font-size: 11px; font-weight: 600; }
+.stat-number { font-size: 26px; font-weight: 800; margin-top: 9px; }
+.filters { background: white; border: 1px solid #e4eaf2; border-radius: 11px; padding: 17px; margin: 20px 0; }
+.form-control, .form-select { font-size: 12px; min-height: 38px; border-color: #d7e0ec; }
+.table-panel { background: white; border: 1px solid #e4eaf2; border-radius: 11px; }
+.table th { background: #f8fafc; color: #64748b; font-size: 11px; white-space: nowrap; padding: 12px 10px; }
+.table td { color: #34445e; font-size: 12px; vertical-align: middle; padding: 12px 10px; }
+.resource-type{ display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 6px; color: white;
+font-size: 15px; }
+.s-orange { background: #ff9417; } .s-green { background: #20a85a; }
+.s-purple { background: #6045df; } .s-pink { background: #d32ca5; }
+.resource-id { color: #244873; font-size: 11px; overflow-wrap: anywhere; }
+.pill { display: inline-block; border-radius: 20px; padding: 4px 8px; font-size: 10px; font-weight: 700; white-space:
+nowrap; }
+.pill-high { background: #ffebe8; color: #b93828; }
+.pill-medium { background: #fff3cd; color: #966400; }
+.pill-low { background: #e4f7eb; color: #16834b; }
+.command { display: flex; align-items: center; gap: 7px; min-width: 200px; }
+.command code { font-size: 10px; color: #34445e; overflow-wrap: anywhere; }
+.copy-btn { background: none; border: 0; color: #526078; cursor: pointer; }
+.copy-btn:hover { color: var(--blue); }
+.btn-amber { background: var(--amber); color: #142039; border: 0; font-weight: 700; font-size: 12px; padding: 9px 15px;
+border-radius: 8px; }
+/* Hides the "Show entries" dropdown element */
+#findingsTable_wrapper .dt-length {
+display: none !important;
+}
+
+/* Hides the search bar element */
+#findingsTable_wrapper .dt-search {
+display: none !important;
+}
+
+{% endblock %}
+
+{% block content %}
+<div class="topbar">
+  <div>
+    <h1 class="page-title">Findings</h1>
+    <p class="page-subtitle">Review idle resources and decide what action to take.</p>
+    {% if scan %}
+    <p class="page-subtitle mt-1">
+      <a href="{{ url_for('scan') }}" class="text-decoration-none" style="color:#2671dc;font-size:12px">
+        <i class="bi bi-arrow-left me-1"></i>Back to scan history
+      </a>
+      &nbsp;·&nbsp;
+      <span style="font-size:12px;color:#64748b">
+        SCAN-{{ scan.id }} · {{ scan.started_at.strftime('%d %b %Y, %I:%M %p') }}
+      </span>
+    </p>
+    {% endif %}
+  </div>
+  <div class="d-none d-md-block">
+    <span class="account"><i class="bi bi-person-circle me-1"></i>{{ current_user.name }}</span>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-6 col-xl-3">
+    <div class="stat">
+      <div class="stat-label">Total Findings</div>
+      <div class="stat-number">{{ findings|length }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-xl-3">
+    <div class="stat">
+      <div class="stat-label">High Priority</div>
+      <div class="stat-number text-danger">{{ high_count }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-xl-3">
+    <div class="stat">
+      <div class="stat-label">Needs Review</div>
+      <div class="stat-number text-warning">{{ findings|length - high_count }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-xl-3">
+    <div class="stat">
+      <div class="stat-label">Estimated Monthly Waste</div>
+      <div class="stat-number text-success">₹{{ "%.2f"|format(total_inr) }}</div>
+    </div>
+  </div>
+</div>
+
+<div class="filters">
+  <div class="row g-3 align-items-end">
+    <div class="col-12 col-lg-4">
+      <label for="customSearch" class="form-label small fw-bold">Search</label>
+      <input id="customSearch" class="form-control" placeholder="Search resource ID, region, details...">
+    </div>
+    <div class="col-6 col-lg-3">
+      <label for="typeFilter" class="form-label small fw-bold">Resource type</label>
+      <select id="typeFilter" class="form-select">
+        <option value="">All resource types</option>
+        <option value="EC2">EC2 Instances</option>
+        <option value="EBS">EBS Volumes</option>
+        <option value="Elastic IP">Elastic IPs</option>
+        <option value="Snapshot">Snapshots</option>
+      </select>
+    </div>
+    <div class="col-6 col-lg-3">
+      <label for="priorityFilter" class="form-label small fw-bold">Priority</label>
+      <select id="priorityFilter" class="form-select">
+        <option value="">All priorities</option>
+        <option value="High">High</option>
+        <option value="Medium">Medium</option>
+        <option value="Low">Low</option>
+      </select>
+    </div>
+    <div class="col-12 col-lg-2">
+      <button class="btn btn-amber w-100" id="resetFilters">Reset</button>
+    </div>
+  </div>
+</div>
+
+<div class="table-panel">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 p-4 pb-3">
+    <div>
+      <h2 class="h6 fw-bold mb-1">Detected Resources</h2>
+      <p class="page-subtitle">
+        {% if scan %}Scan from {{ scan.started_at.strftime('%d %b %Y') }}{% else %}No scan yet{% endif %}
+      </p>
+    </div>
+    <span class="small text-secondary" id="resultCount">{{ findings|length }} result{{ findings|length != 1 and 's' or
+      '' }}</span>
+  </div>
+
+  <div class="table-responsive px-3 pb-3">
+    {% if findings %}
+    <table id="findingsTable" class="table table-hover align-middle mb-0 w-100">
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Resource ID</th>
+          <th>Details</th>
+          <th>Priority</th>
+          <th>Monthly Waste</th>
+          <th>Backup Command</th>
+          <th>Cleanup Command</th>
+        </tr>
+      </thead>
+      <tbody id="findingsBody">
+        {% for f in findings %}
+        {% set type_key =
+        'EC2' if 'EC2' in f.resource_type else
+        'EBS' if 'EBS volume' in f.resource_type else
+        'Elastic IP' if 'Elastic IP' in f.resource_type else
+        'Snapshot' %}
+        {% set icon_class =
+        's-orange' if 'EC2' in f.resource_type else
+        's-green' if 'EBS volume' in f.resource_type else
+        's-purple' if 'Elastic IP' in f.resource_type else
+        's-pink' %}
+        {% set icon =
+        'bi-server' if 'EC2' in f.resource_type else
+        'bi-device-ssd' if 'EBS volume' in f.resource_type else
+        'bi-globe-americas' if 'Elastic IP' in f.resource_type else
+        'bi-camera' %}
+        <tr data-type="{{ type_key }}" data-priority="{{ f.priority }}">
+          <td><span class="resource-type {{ icon_class }}"><i class="bi {{ icon }}"></i></span>
+            <span class="d-none">{{ f.resource_type }}</span>
+          </td>
+          <td><code class="resource-id">{{ f.resource_id }}</code></td>
+          <td>{{ f.detail }}<br><small class="text-muted">{{ f.region }}</small></td>
+          <td>
+            <span class="pill pill-{{ f.priority|lower }}">{{ f.priority }}</span>
+          </td>
+          <td class="fw-bold">
+            {% if f.monthly_inr %}
+            {% if f.upper_bound %}up to {% endif %}₹{{ "%.2f"|format(f.monthly_inr) }}
+            {% else %}
+            <span class="text-muted">unknown</span>
+            {% endif %}
+          </td>
+          {% if f.cleanup_command %}
+          {% for line in f.cleanup_command.split('\n') %}
+          {% if line.strip() %}
+          <td>
+            <div class="command">
+              <code>{{ line }}</code>
+              {% if line %}
+              <button class="copy-btn" onclick="copyCmd(this)" aria-label="Copy">
+                <i class="bi bi-copy"></i>
+              </button>
+              {% endif %}
+            </div>
+          </td>
+          {% endif %}
+          {% endfor %}
+          {% else %}
+          <td colspan="2">—</td>
+          {% endif %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="text-center py-5 text-muted">
+      No findings yet. <a href="{{ url_for('scan') }}">Run a scan</a> to see results here.
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<div class="alert alert-info small mt-3 mb-0">
+  <i class="bi bi-info-circle me-2"></i>
+  Cleanup commands are suggestions. Review each one carefully before running it yourself.
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  $(document).ready(function () {
+    if ($('#findingsTable').length) {
+      const table = $('#findingsTable').DataTable({
+        pageLength: 10,
+        responsive: true,
+        order: [[4, 'desc']]
+      });
+
+      // Custom global text filter
+      $('#customSearch').on('keyup', function () {
+        table.search(this.value).draw();
+      });
+
+      // Type filter on column 0
+      $('#typeFilter').on('change', function () {
+        table.column(0).search(this.value).draw();
+      });
+
+      // Priority filter on column 3
+      $('#priorityFilter').on('change', function () {
+        table.column(3).search(this.value ? `^${this.value}$` : '', true, false).draw();
+      });
+
+      // Reset filters
+      $('#resetFilters').on('click', function () {
+        $('#customSearch').val('');
+        $('#typeFilter').val('');
+        $('#priorityFilter').val('');
+        table.search('').columns().search('').draw();
+      });
+    }
+  });
+
+  function copyCmd(btn) {
+    const code = btn.parentElement.querySelector('code').innerText;
+    navigator.clipboard.writeText(code).then(() => {
+      btn.innerHTML = '<i class="bi bi-check2"></i>';
+      setTimeout(() => btn.innerHTML = '<i class="bi bi-copy"></i>', 1200);
+    });
+  }
+</script>
+{% endblock %}
