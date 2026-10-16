@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-4" style="max-width:760px">
+  <h1 class="h4">Connect your AWS account</h1>
+  {% if conn.status == "active" %}
+    <div class="alert alert-success">Connected: account {{ conn.account_id }}</div>
+  {% endif %}
+  {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+
+  <p class="mb-1">Your external ID</p>
+  <pre class="bg-light p-2 border rounded">{{ conn.external_id }}</pre>
+
+  <ol class="mt-3">
+    <li>In IAM, create a role named <code>WasteScannerReadOnly</code> with this trust policy:
+      <pre class="bg-light p-2 border rounded small">{{ trust_json }}</pre></li>
+    <li>Attach this as an inline policy:
+      <pre class="bg-light p-2 border rounded small">{{ perms_json }}</pre></li>
+    <li>Paste the role ARN here:</li>
+  </ol>
+
+  <form method="post" class="d-flex gap-2">
+    <input name="role_arn" class="form-control" placeholder="arn:aws:iam::123456789012:role/WasteScannerReadOnly" value="{{ conn.role_arn or '' }}" required>
+    <button class="btn btn-primary">Verify</button>
+  </form>
+</div>
+{% endblock %}
