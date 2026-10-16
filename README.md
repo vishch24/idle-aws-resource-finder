@@ -129,8 +129,8 @@ The app never stores your AWS access keys. It uses a read-only cross-account IAM
 
 ```bash
 # Clone the repo
-git clone https://github.com/vishch24/idle-aws-resource-finder-for-learners.git
-cd idle-aws-resource-finder-for-learners
+git clone https://github.com/vishch24/idle-aws-resource-finder.git
+cd idle-aws-resource-finder
 
 # Create and activate a virtual environment
 python -m venv venv
@@ -172,19 +172,6 @@ aws sts get-caller-identity --query Arn --output text
 
 ### 2. Create the role in your AWS account
 Go to IAM → Roles → Create role → Custom trust policy. The trust policy and permissions policy are generated for you on the Settings page once you register and log in.
-
-### 3. Give the caller permission to assume the role
-Attach this inline policy to the IAM user running the app:
-```json
-{
-  "Version": "2012-10-17",
-  "Statement": [{
-    "Effect": "Allow",
-    "Action": "sts:AssumeRole",
-    "Resource": "arn:aws:iam::<your-account-id>:role/WasteScannerReadOnly"
-  }]
-}
-```
 
 ---
 
