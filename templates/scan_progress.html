@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+{% block title %}Scanning… | Idle AWS Finder{% endblock %}
+
+{% block extra_css %}
+.progress-card   { background: white; border: 1px solid #e4eaf2; border-radius: 14px; padding: 36px; max-width: 620px; margin: 0 auto; box-shadow: 0 4px 20px #14203908; }
+.scan-icon       { width: 64px; height: 64px; border-radius: 16px; background: #eff6ff; border: 1px solid #d6e8ff; display: grid; place-items: center; margin: 0 auto 20px; font-size: 28px; color: #2671dc; }
+.scan-title      { font-size: 20px; font-weight: 800; text-align: center; margin-bottom: 6px; }
+.scan-sub        { color: #64748b; font-size: 13px; text-align: center; margin-bottom: 28px; }
+.status-row      { display: flex; align-items: center; gap: 12px; padding: 13px 0; border-bottom: 1px solid #f0f4f8; }
+.status-row:last-of-type { border-bottom: 0; }
+.status-dot      { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.dot-wait        { background: #d1d5db; }
+.dot-spin        { background: #2671dc; animation: pulse 1s infinite; }
+.dot-done        { background: #20a85a; }
+.dot-fail        { background: #e53e3e; }
+.status-label    { font-size: 13px; font-weight: 600; flex: 1; }
+.status-note     { font-size: 11px; color: #64748b; }
+.bar-wrap        { background: #f0f4f8; border-radius: 30px; height: 8px; margin: 24px 0 8px; overflow: hidden; }
+.bar-fill        { height: 100%; border-radius: 30px; background: linear-gradient(90deg, #2671dc, #5da8ff); transition: width .4s ease; }
+.bar-label       { font-size: 11px; color: #64748b; text-align: right; margin-bottom: 24px; }
+.btn-results     { display: block; width: 100%; padding: 14px; border: 0; border-radius: 9px; background: var(--amber); color: #142039; font-weight: 800; font-size: 14px; text-align: center; text-decoration: none; margin-top: 24px; transition: background .2s; }
+.btn-results:hover { background: #ffda78; color: #142039; }
+.btn-results:disabled, .btn-results[aria-disabled="true"] { background: #e2e8f0; color: #94a3b8; pointer-events: none; }
+.error-box       { background: #fff5f5; border: 1px solid #fed7d7; border-radius: 9px; padding: 14px; color: #c53030; font-size: 12px; margin-top: 20px; display: none; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
+{% endblock %}
+
+{% block content %}
+<div class="topbar">
+  <div>
+    <h1 class="page-title">Scanning</h1>
+    <p class="page-subtitle">Please wait while your AWS account is being scanned.</p>
+  </div>
+</div>
+
+<div class="progress-card">
+  <div class="scan-icon"><i class="bi bi-search"></i></div>
+  <div class="scan-title" id="mainTitle">Scanning your AWS account…</div>
+  <div class="scan-sub" id="mainSub">
+    Checking resources across
+    {% if regions and regions|length > 0 %}
+      {{ regions|join(', ') }}
+    {% else %}
+      all enabled regions
+    {% endif %}
+  </div>
+
+  <div class="bar-wrap"><div class="bar-fill" id="barFill" style="width:5%"></div></div>
+  <div class="bar-label" id="barLabel">Starting…</div>
+
+  <div id="statusList">
+    <div class="status-row" id="row-queued">
+      <span class="status-dot dot-spin" id="dot-queued"></span>
+      <span class="status-label">Connecting to your AWS role</span>
+      <span class="status-note" id="note-queued">Verifying AssumeRole…</span>
+    </div>
+    <div class="status-row" id="row-running">
+      <span class="status-dot dot-wait" id="dot-running"></span>
+      <span class="status-label">Scanning regions</span>
+      <span class="status-note" id="note-running">Waiting to start</span>
+    </div>
+    <div class="status-row" id="row-completed">
+      <span class="status-dot dot-wait" id="dot-completed"></span>
+      <span class="status-label">Saving findings</span>
+      <span class="status-note" id="note-completed">Waiting</span>
+    </div>
+  </div>
+
+  <div class="error-box" id="errorBox"></div>
+
+  <a href="{{ url_for('findings') }}" class="btn-results" id="resultsBtn"
+     aria-disabled="true" style="pointer-events:none;background:#e2e8f0;color:#94a3b8">
+    <i class="bi bi-clipboard-data me-2"></i>View Findings
+  </a>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const SCAN_ID   = {{ scan_id }};
+const POLL_MS   = 2500;
+const STATUS_URL = "{{ url_for('scan_status', scan_id=0) }}".replace('/0/', `/${SCAN_ID}/`);
+const RESULTS   = "{{ url_for('findings') }}";
+
+const bar     = document.getElementById('barFill');
+const barLbl  = document.getElementById('barLabel');
+const btn     = document.getElementById('resultsBtn');
+const errBox  = document.getElementById('errorBox');
+const title   = document.getElementById('mainTitle');
+const sub     = document.getElementById('mainSub');
+
+function dot(id, cls)  { document.getElementById('dot-'+id).className = 'status-dot '+cls; }
+function note(id, txt) { document.getElementById('note-'+id).textContent = txt; }
+
+function setProgress(pct, label) {
+  bar.style.width = pct + '%';
+  barLbl.textContent = label;
+}
+
+function onRunning() {
+  dot('queued',    'dot-done');
+  note('queued',   'Role assumed ✓');
+  dot('running',   'dot-spin');
+  note('running',  'Checking EC2, EBS, Elastic IPs, Snapshots…');
+  setProgress(45, 'Scanning regions…');
+}
+
+function onDone(skipped) {
+  dot('running',   'dot-done');
+  note('running',  skipped && skipped.length ? `Done — ${skipped.length} region(s) skipped` : 'All regions checked ✓');
+  dot('completed', 'dot-done');
+  note('completed','Findings saved ✓');
+  setProgress(100, 'Complete');
+  title.textContent = 'Scan complete';
+  sub.textContent   = 'Your findings are ready to review.';
+  btn.removeAttribute('aria-disabled');
+  btn.style.pointerEvents = '';
+  btn.style.background    = '';
+  btn.style.color         = '';
+  // Auto-redirect after 3 seconds
+  setTimeout(() => window.location.href = RESULTS, 3000);
+}
+
+function onFailed(err) {
+  dot('running', 'dot-fail');
+  note('running', 'Failed');
+  setProgress(100, 'Failed');
+  title.textContent = 'Scan failed';
+  errBox.style.display = 'block';
+  errBox.innerHTML = '<i class="bi bi-exclamation-circle me-2"></i>'
+    + (err || 'An error occurred. Check your AWS connection in Settings and try again.');
+  btn.removeAttribute('aria-disabled');
+  btn.style.pointerEvents = '';
+  btn.href = "{{ url_for('scan') }}";
+  btn.innerHTML = '<i class="bi bi-arrow-repeat me-2"></i>Try Again';
+  btn.style.background = '#e53e3e';
+  btn.style.color = 'white';
+}
+
+let ranRunning = false;
+let timer;
+
+async function poll() {
+  try {
+    const res  = await fetch(STATUS_URL);
+    const data = await res.json();
+
+    if (data.status === 'running' && !ranRunning) {
+      ranRunning = true;
+      onRunning();
+    }
+    if (data.status === 'completed') {
+      clearInterval(timer);
+      onDone(data.skipped_regions);
+    } else if (data.status === 'failed') {
+      clearInterval(timer);
+      onFailed(data.error);
+    }
+  } catch (e) {
+    // network blip, keep polling
+  }
+}
+
+timer = setInterval(poll, POLL_MS);
+poll(); // run immediately on load
+</script>
+{% endblock %}
