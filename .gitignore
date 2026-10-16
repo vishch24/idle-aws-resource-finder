@@ -1,0 +1,65 @@
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+.ruff_cache/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.so
+
+# Virtual environment
+venv/
+.venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Flask / app
+instance/
+*.sqlite
+*.db
+
+# AWS credentials — never commit these
+.aws/
+aws_credentials
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*.DS_Store
+
+# Logs
+*.log
+logs/
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+.eggs/
+
+# Coverage
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Elastic Beanstalk
+.elasticbeanstalk/
+*.zip
+
+# Node (if you ever add frontend tooling)
+node_modules/
+
+# Compiled assets
+*.pyc
+
+# Shell
+check_bare_clients.sh
