@@ -1,0 +1,66 @@
+# Version control
+.git/
+.gitignore
+
+# Environment variables & secrets (critical)
+.env
+.env.*
+.aws/
+aws_credentials
+
+# Python bytecode & cache
+__pycache__/
+.ruff_cache/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.so
+
+# Local virtual environments
+venv/
+.venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Local databases & application state
+instance/
+*.sqlite
+*.db
+mysql_data/
+
+# IDE & OS-generated files
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Build artifacts & distribution
+dist/
+build/
+*.egg-info/
+.eggs/
+
+# Testing & code coverage
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Cloud deployment artifacts & documentation
+.elasticbeanstalk/
+*.zip
+*.md
+Dockerfile*
+docker-compose*.yml
+
+# Local utilities
+check_bare_clients.sh
+node_modules/
