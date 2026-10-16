@@ -1,0 +1,43 @@
+# Local development only.
+# On Beanstalk, set DATABASE_URL to your RDS endpoint via environment properties.
+# Never commit .env to git.
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: idle_aws_mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost",
+             "-u", "root", "--password=${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build: .
+    container_name: idle_aws_web
+    restart: always
+    env_file: .env
+    environment:
+      # Overrides whatever DATABASE_URL is in .env for local compose use.
+      # Uses the compose service name 'db' as the host.
+      DATABASE_URL: mysql+pymysql://${MYSQL_USER}:${MYSQL_PASSWORD}@db:3306/${MYSQL_DATABASE}
+    ports:
+      - "5000:5000"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      # Prevent the host venv from overwriting the container's venv
+      - /app/venv
+
+volumes:
+  mysql_data:
