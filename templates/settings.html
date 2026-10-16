@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+{% block title %}Settings | Idle AWS Finder{% endblock %}
+
+{% block extra_css %}
+.settings-panel { background: white; border: 1px solid #e4eaf2; border-radius: 12px; margin-bottom: 20px; overflow:
+hidden; }
+.panel-header { padding: 20px 23px; border-bottom: 1px solid #e9eef5; }
+.panel-title { font-size: 15px; font-weight: 800; margin-bottom: 5px; }
+.panel-desc { color: #64748b; font-size: 12px; margin: 0; line-height: 1.7; }
+.panel-body { padding: 23px; }
+.form-label { font-size: 12px; font-weight: 700; }
+.form-control, .form-select { font-size: 13px; min-height: 42px; border-color: #d7e0ec; }
+.form-control:focus, .form-select:focus { border-color: #7aa8e8; box-shadow: 0 0 0 .2rem #2671dc18; }
+.form-text { color: #718096; font-size: 11px; }
+.btn-amber { background: var(--amber); color: #142039; border: 0; font-weight: 800; font-size: 12px; padding: 12px 18px;
+border-radius: 8px; }
+.btn-amber:hover { background: #ffda78; }
+.setting-row { display: flex; justify-content: space-between; align-items: center; gap: 20px; padding: 16px 0;
+border-bottom: 1px solid #edf0f5; }
+.setting-row:last-child { border-bottom: 0; padding-bottom: 0; }
+.setting-name { font-size: 12px; font-weight: 700; }
+.setting-desc { color: #64748b; font-size: 11px; line-height: 1.6; margin-top: 4px; }
+.form-check-input:checked { background-color: #2671dc; border-color: #2671dc; }
+.warning-box { display: flex; gap: 10px; padding: 13px; border-radius: 9px; background: #fff7e6; border: 1px solid
+#f8e3b0; color: #845b12; font-size: 11px; line-height: 1.7; }
+{% endblock %}
+
+{% block content %}
+<div class="topbar">
+  <div>
+    <h1 class="page-title">Settings</h1>
+    <p class="page-subtitle">Manage your profile, AWS connection, and scan preferences.</p>
+  </div>
+  <span class="account"><i class="bi bi-person-circle me-1"></i>{{ current_user.name }}</span>
+</div>
+
+<form method="POST" action="{{ url_for('settings') }}">
+
+  <!-- Profile -->
+  <section class="settings-panel">
+    <div class="panel-header">
+      <div class="panel-title"><i class="bi bi-person me-2 text-primary"></i>Profile Information</div>
+      <p class="panel-desc">Update the details associated with your account.</p>
+    </div>
+    <div class="panel-body">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label" for="fullName">Full name</label>
+          <input id="fullName" name="fullName" class="form-control" value="{{ current_user.name }}" autocomplete="name">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="email">Email address</label>
+          <input id="email" name="email" type="email" class="form-control" value="{{ current_user.email }}"
+            autocomplete="email">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- AWS Connection -->
+  <section class="settings-panel">
+    <div class="panel-header">
+      <div class="panel-title"><i class="bi bi-cloud me-2 text-primary"></i>AWS Connection</div>
+      <p class="panel-desc">Connect a read-only IAM role so scans run against your AWS account.</p>
+    </div>
+    <div class="panel-body">
+      {% if conn.status == "active" %}
+      <div class="alert alert-success py-2 px-3 mb-3" style="font-size:12px">
+        <i class="bi bi-check-circle me-1"></i> Connected — account {{ conn.account_id }}
+      </div>
+      {% else %}
+      <div class="alert alert-warning py-2 px-3 mb-3" style="font-size:12px">
+        <i class="bi bi-exclamation-triangle me-1"></i> Not connected yet. Scans won't run until you connect a role.
+      </div>
+      {% endif %}
+      {% if connect_error %}
+      <div class="alert alert-danger py-2 px-3 mb-3" style="font-size:12px">{{ connect_error }}</div>
+      {% endif %}
+
+      <label class="form-label">Your external ID</label>
+      <pre class="bg-light p-2 border rounded small mb-3" style="user-select:all">{{ conn.external_id }}</pre>
+
+      <details class="mb-3">
+        <summary class="form-label" style="cursor:pointer">Role setup instructions</summary>
+        <ol class="mt-2" style="font-size:12px">
+          <li>In IAM, create a role named <code>WasteScannerReadOnly</code> with this <b>trust policy</b>:
+            <pre class="bg-light p-2 border rounded small">{{ trust_json }}</pre>
+          </li>
+          <li>Attach this as an <b>inline policy</b>:
+            <pre class="bg-light p-2 border rounded small">{{ perms_json }}</pre>
+          </li>
+        </ol>
+      </details>
+
+      <form method="POST" action="{{ url_for('settings') }}" class="d-flex gap-2">
+        <input name="role_arn" class="form-control" required
+          placeholder="arn:aws:iam::123456789012:role/WasteScannerReadOnly" value="{{ conn.role_arn or '' }}">
+        <button class="btn-amber" style="white-space:nowrap">Verify &amp; Connect</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- Scan Preferences -->
+  <section class="settings-panel">
+    <div class="panel-header">
+      <div class="panel-title"><i class="bi bi-sliders me-2 text-primary"></i>Scan Preferences</div>
+      <p class="panel-desc">Default options for future scans.</p>
+    </div>
+    <div class="panel-body">
+      <div class="row g-3 mb-3">
+        <div class="col-md-6">
+          <label class="form-label" for="cpuThreshold">Low CPU threshold</label>
+          <select id="cpuThreshold" name="cpuThreshold" class="form-select">
+            {% for label, val in [('Below 3%', 3.0), ('Below 5%', 5.0), ('Below 10%', 10.0)] %}
+            <option {% if settings.cpu_threshold==val %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="snapshotAge">Old snapshot age</label>
+          <select id="snapshotAge" name="snapshotAge" class="form-select">
+            {% for label, val in [('Older than 30 days', 30), ('Older than 60 days', 60), ('Older than 90 days', 90),
+            ('Older than 180 days', 180)] %}
+            <option {% if settings.snapshot_age_days==val %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <div class="setting-row">
+        <div>
+          <div class="setting-name">Include pricing estimates</div>
+          <div class="setting-desc">Show estimated monthly cost in findings.</div>
+        </div>
+        <div class="form-check form-switch">
+          <input class="form-check-input" type="checkbox" id="pricing" name="pricing" {% if settings.include_pricing
+            %}checked{% endif %}>
+        </div>
+      </div>
+
+      <div class="setting-row">
+        <div>
+          <div class="setting-name">Scan all enabled regions</div>
+          <div class="setting-desc">Include all AWS regions enabled for the account.</div>
+        </div>
+        <div class="form-check form-switch">
+          <input class="form-check-input" type="checkbox" id="allRegions" name="allRegions" {% if
+            settings.scan_all_regions %}checked{% endif %}>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Notifications -->
+  <section class="settings-panel">
+    <div class="panel-header">
+      <div class="panel-title"><i class="bi bi-bell me-2 text-primary"></i>Notifications</div>
+      <p class="panel-desc">Choose which application notifications you want to receive.</p>
+    </div>
+    <div class="panel-body">
+      <div class="setting-row">
+        <div>
+          <div class="setting-name">Scan completion</div>
+          <div class="setting-desc">Show a notification when a scan finishes.</div>
+        </div>
+        <div class="form-check form-switch">
+          <input class="form-check-input" type="checkbox" id="scanNotifications" name="scanNotifications" {% if
+            settings.scan_notifications %}checked{% endif %}>
+        </div>
+      </div>
+      <div class="setting-row">
+        <div>
+          <div class="setting-name">High-cost findings</div>
+          <div class="setting-desc">Highlight findings with higher estimated waste.</div>
+        </div>
+        <div class="form-check form-switch">
+          <input class="form-check-input" type="checkbox" id="costNotifications" name="costNotifications" {% if
+            settings.cost_notifications %}checked{% endif %}>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="d-flex flex-wrap justify-content-end gap-2">
+    <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary px-4">Cancel</a>
+    <button type="submit" class="btn-amber"><i class="bi bi-check2 me-1"></i>Save Settings</button>
+  </div>
+</form>
+{% endblock %}
