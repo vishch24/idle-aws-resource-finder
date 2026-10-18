@@ -1,0 +1,44 @@
+name: DevSecOps Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  # 1. Secret Scanning (Gitleaks)
+  secret-scan:
+    uses: ./.github/workflows/secrets-scanning.yml
+    secrets: inherit
+
+  # 2. Code Linting (Ruff / Flake8)
+  code:
+    uses: ./.github/workflows/lint.yml
+
+  # 3. Dependency Vulnerability Audit (Pip-audit)
+  dependency-scan:
+    uses: ./.github/workflows/dependency_scan.yml
+
+  # 4. Build Container Image & Vulnerability Scan (Trivy)
+  build-and-scan:
+    needs: [secret-scan, code, dependency-scan]
+    uses: ./.github/workflows/trivy_scans.yml
+    secrets: inherit
+
+  # 5. Push Container to Registry
+  docker-push:
+    needs: build-and-scan
+    uses: ./.github/workflows/docker_push.yml
+    secrets: inherit
+
+  # 6. Deploy to AWS Elastic Beanstalk
+  deploy:
+    needs: docker-push
+    uses: ./.github/workflows/cd.yml
+    secrets: inherit
+
+  # 7. Dynamic Application Security Testing (OWASP ZAP Baseline)
+  dast:
+    needs: deploy
+    uses: ./.github/workflows/dast.yml
+    secrets: inherit
