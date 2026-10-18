@@ -15,8 +15,8 @@ jobs:
           DOCKERHUB_USER: ${{ secrets.DOCKERHUB_USERNAME }}
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          sed -i 's|DOCKERHUB_USER|${DOCKERHUB_USER}|g' docker-compose.yml
-          sed -i 's|IMAGE_TAG|${IMAGE_TAG}|g' docker-compose.yml
+          sed -i "s|DOCKERHUB_USER|${DOCKERHUB_USER}|g" docker-compose.yml
+          sed -i "s|IMAGE_TAG|${IMAGE_TAG}|g" docker-compose.yml
 
       - name: Fail if placeholders are still present
         run: |
