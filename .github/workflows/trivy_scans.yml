@@ -22,6 +22,11 @@ jobs:
           docker build --no-cache \
             -t ${{ secrets.DOCKERHUB_USERNAME }}/idle-aws-web:${{ github.sha }} .
 
+      - name: Inspect installed packages
+        run: |
+          docker run --rm ${{ secrets.DOCKERHUB_USERNAME }}/idle-aws-web:${{ github.sha }} pip show msgpack urllib3 setuptools
+          docker run --rm ${{ secrets.DOCKERHUB_USERNAME }}/idle-aws-web:${{ github.sha }} find / -name "msgpack*" 2>/dev/null || true
+
       - name: Run Trivy Security Scan
         uses: aquasecurity/trivy-action@v0.36.0
         with:
