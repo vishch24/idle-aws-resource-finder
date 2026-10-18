@@ -19,7 +19,7 @@ jobs:
 
       - name: Docker Build
         run: |
-          docker build \
+          docker build --no-cache \
             -t ${{ secrets.DOCKERHUB_USERNAME }}/idle-aws-web:${{ github.sha }} .
 
       - name: Run Trivy Security Scan
