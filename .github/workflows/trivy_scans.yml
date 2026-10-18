@@ -1,0 +1,33 @@
+name: Build and Trivy Scan
+
+on:
+  workflow_call:
+
+jobs:
+  trivy:
+    runs-on: ubuntu-latest
+    env:
+      IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/idle-aws-web
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v7
+
+      - name: Dockerfile HadoLint
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: ./Dockerfile
+
+      - name: Docker Build
+        run: |
+          docker build \
+            -t ${{ secrets.DOCKERHUB_USERNAME }}/idle-aws-web:${{ github.sha }} .
+
+      - name: Run Trivy Security Scan
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: "${{ secrets.DOCKERHUB_USERNAME }}/idle-aws-web:${{ github.sha }}"
+          format: "table"
+          exit-code: "1"  # Set to '1' if you want CRITICAL CVEs to break the build
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: "CRITICAL,HIGH"
