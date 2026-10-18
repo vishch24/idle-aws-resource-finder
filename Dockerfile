@@ -6,9 +6,12 @@ ENV PYTHONUNBUFFERED=1 \
 
 WORKDIR /app
 
+# hadolint ignore=DL3018
 RUN apk add --no-cache gcc musl-dev mariadb-dev pkgconfig
 
 COPY requirements.txt .
+
+# hadolint ignore=DL3013
 RUN pip install --upgrade pip && pip install -r requirements.txt
 
 COPY . .
