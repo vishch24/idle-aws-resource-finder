@@ -1,0 +1,15 @@
+name: Dynamic Application Security Testing (DAST)
+
+on:
+  workflow_call:
+
+jobs:
+  zap:
+    runs-on: ubuntu-latest
+    steps:
+      - name: OWASP ZAP Baseline Scan
+        uses: zaproxy/action-baseline@v0.14.0
+        with:
+          target: ${{ secrets.DEPLOYED_APP_URL }}  # e.g., http://your-env.elasticbeanstalk.com
+          issue_title: "Security Alert: ZAP DAST Vulnerability"
+          fail_action: false
