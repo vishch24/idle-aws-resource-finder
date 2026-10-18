@@ -1,0 +1,43 @@
+name: Continuous Deployment
+
+on:
+  workflow_call:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v7
+
+      - name: Substitute Docker Image Tag
+        env:
+          DOCKERHUB_USER: ${{ secrets.DOCKERHUB_USERNAME }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          sed -i 's|DOCKERHUB_USER|${DOCKERHUB_USER}|g' docker-compose.yml
+          sed -i 's|IMAGE_TAG|${IMAGE_TAG}|g' docker-compose.yml
+
+      - name: Fail if placeholders are still present
+        run: |
+          if grep -E 'DOCKERHUB_USER|IMAGE_TAG' docker-compose.yml; then
+            echo "Placeholder substitution failed"; exit 1
+          fi
+
+      - name: Package Application
+        run: |
+          mkdir -p deploy
+          zip deploy/app-${{ github.sha }}.zip docker-compose.yml
+
+      - name: Deploy to Elastic Beanstalk
+        uses: einaregilsson/beanstalk-deploy@v22
+        with:
+          aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          region: ${{ secrets.AWS_REGION }}
+          application_name: ${{ secrets.EB_APP_NAME }}
+          environment_name: ${{ secrets.EB_ENV_NAME }}
+          version_label: "deploy-${{ github.sha }}"
+          deployment_package: deploy/app-${{ github.sha }}.zip
+          use_existing_version_if_available: true
+          wait_for_deployment: true
