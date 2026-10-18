@@ -12,7 +12,7 @@ RUN apk add --no-cache gcc musl-dev mariadb-dev pkgconfig
 COPY requirements.txt .
 
 # hadolint ignore=DL3013
-RUN pip install --no-cache-dir --upgrade pip && \
+RUN pip install --no-cache-dir --upgrade pip "setuptools>=78.1.1" "urllib3>=2.8.0" "msgpack>=1.2.1" && \
     pip install --no-cache-dir -r requirements.txt
 
 COPY . .
