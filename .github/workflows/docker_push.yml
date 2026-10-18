@@ -23,5 +23,3 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/idle-aws-web:${{ github.sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
