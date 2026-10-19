@@ -187,19 +187,22 @@ border-radius: 8px; }
             <span>{{ s.status }}</span>
             {% endif %}
           </td>
-          <td>
-            {% if s.status == 'completed' %}
+          <td>          
             <div class="d-flex gap-2 align-items-center">
+              {% if s.status == 'completed' %}
               <a href="{{ url_for('findings', scan_id=s.id) }}" class="btn btn-sm btn-outline-primary"
                 style="font-size:11px">
                 <i class="bi bi-eye me-1"></i>View
               </a>
+              {% endif %}
+
               <!-- Delete button: shows confirm row on click, does not submit yet -->
               <button class="btn btn-sm btn-outline-danger" style="font-size:11px"
                 onclick="showConfirm({{ s.id }}, this)">
                 <i class="bi bi-trash me-1"></i>Delete
               </button>
             </div>
+            
             <!-- Confirm row, hidden until the delete button above is clicked -->
             <div id="confirm-{{ s.id }}" class="d-none mt-2" style="font-size:11px; background:#fff5f5; border:1px solid #fed7d7;
                 border-radius:7px; padding:8px 10px;">
@@ -211,8 +214,7 @@ border-radius: 8px; }
                 <button class="btn btn-sm btn-outline-secondary" style="font-size:11px"
                   onclick="hideConfirm({{ s.id }})">Cancel</button>
               </div>
-            </div>
-            {% endif %}
+            </div>            
           </td>
         </tr>
         {% endfor %}
