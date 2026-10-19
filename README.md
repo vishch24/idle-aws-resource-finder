@@ -52,6 +52,27 @@ idle-aws-resource-finder/
 
 ---
 
+## CI/CD Pipeline
+
+Every push to `main` runs a 7-stage DevSecOps pipeline via GitHub Actions:
+
+1. **Secret scanning** — Gitleaks scans git history for leaked credentials
+2. **Code lint** — Ruff checks Python syntax and style
+3. **Dependency audit** — pip-audit checks all packages against the CVE database
+4. **Container security** — Hadolint lints the Dockerfile; Trivy scans the built image for HIGH and CRITICAL CVEs
+5. **Image push** — scanned image is tagged with the commit SHA and pushed to Docker Hub
+6. **Deploy** — docker-compose bundle deployed to AWS Elastic Beanstalk (Docker platform)
+7. **DAST** — OWASP ZAP baseline scan runs against the live deployed URL
+
+> **Note on Trivy findings:** The image scan may report CVEs in packages
+> under `pip/_vendor/`. These are pip's own internal copies bundled inside
+> the pip release itself, not application dependencies. They are never
+> called by the Flask app. The application-level packages in `site-packages`
+> are fully patched. These CVEs are suppressed via `.trivyignore` with the
+> rationale documented in that file.
+
+---
+
 ## The Problem
 
 AWS learners and small teams forget to shut down resources after practice sessions. Idle EC2 instances, unattached EBS volumes, unused Elastic IPs, and old snapshots keep billing quietly in the background. AWS billing tools exist, but they are built for enterprises. This app is built for learners.
