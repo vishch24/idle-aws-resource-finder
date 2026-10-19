@@ -3,7 +3,7 @@ services:
     image: DOCKERHUB_USER/idle-aws-web:IMAGE_TAG
     restart: always
     ports:
-      - "5000:5000"
+      - "80:5000"
     environment:
       SECRET_KEY: ${SECRET_KEY}
       APP_PRINCIPAL_ARN: ${APP_PRINCIPAL_ARN}
