@@ -40,5 +40,8 @@ jobs:
   # 7. Dynamic Application Security Testing (OWASP ZAP Baseline)
   dast:
     needs: deploy
+    permissions:
+      contents: read
+      issues: write
     uses: ./.github/workflows/dast.yml
     secrets: inherit
