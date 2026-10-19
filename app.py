@@ -328,9 +328,12 @@ def delete_scan(scan_id):
     scan = Scan.query.filter_by(
         id=scan_id, user_id=current_user.id
     ).first_or_404()
-    # Don't delete a scan that is still running
-    if scan.status in ("pending", "running"):
-        flash("Cannot delete a scan that is still running.", "warning")
+
+    force = request.args.get("force", "false").lower() == "true"
+
+    # Only prevent deletion if it's genuinely running and not a forced delete
+    if scan.status == "running" and not force:
+        flash("Cannot delete a scan that is actively running.", "warning")
         return redirect(url_for("scan"))
     db.session.delete(scan)
     db.session.commit()
